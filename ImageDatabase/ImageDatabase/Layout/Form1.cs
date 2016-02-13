@@ -52,6 +52,7 @@ namespace ImageDatabase
                 checkBox1.CheckState = CheckState.Unchecked;
             else
                 checkBox1.CheckState = CheckState.Checked;
+            fileBrowser1.displayMode = checkBox1.Checked;
         }
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
@@ -60,6 +61,7 @@ namespace ImageDatabase
                 checkBox2.CheckState = CheckState.Unchecked;
             else
                 checkBox2.CheckState = CheckState.Checked;
+            fileBrowser1.displayMode = checkBox1.Checked;
         }
     }
 }
