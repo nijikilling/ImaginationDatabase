@@ -73,6 +73,16 @@ namespace ImageDatabase.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap FolderNospace {
+            get {
+                object obj = ResourceManager.GetObject("FolderNospace", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap List {
             get {
                 object obj = ResourceManager.GetObject("List", resourceCulture);
@@ -86,6 +96,16 @@ namespace ImageDatabase.Properties {
         internal static System.Drawing.Bitmap ReturnFolder {
             get {
                 object obj = ResourceManager.GetObject("ReturnFolder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ReturnFolderNospace {
+            get {
+                object obj = ResourceManager.GetObject("ReturnFolderNospace", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

@@ -1,4 +1,6 @@
-﻿namespace ImageDatabase
+﻿using ImageDatabase.Source;
+
+namespace ImageDatabase.Layout
 {
     partial class Form1
     {
@@ -44,7 +46,7 @@
             this.checkBox2 = new System.Windows.Forms.CheckBox();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.trackBar1 = new System.Windows.Forms.TrackBar();
-            this.fileBrowser1 = new ImageDatabase.FileBrowser();
+            this.fileBrowser1 = new FileBrowser();
             this.menuStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();

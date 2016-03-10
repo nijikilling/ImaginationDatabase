@@ -1,28 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.IO;
 using System.Drawing;
+using System.IO;
+using System.Windows.Forms;
 
-namespace ImageDatabase
+namespace ImageDatabase.Source
 {
-    public class FileBrowserItem : Panel
+    public sealed class FileBrowserItem : Panel
     {
-        public int type;
+        public int Type;
         //0 => folder
         //1 => file
         //2 => go up
         //3 => disk drive
 
-        public string fullPath;
-        public FileBrowser owner;
-        public Image icon;
+        public string FullPath;
+        public FileBrowser Owner;
+        public Image Icon;
 
-        new public Label Text;
-        public PictureBox button;
+        public new Label Text;
+        public PictureBox PictureBlock;
 
         public FileBrowserItem()
         {
@@ -31,16 +27,15 @@ namespace ImageDatabase
 
         public FileBrowserItem(int tp, string path, int size, float fsize, Image img, FileBrowser parent, bool dmode)
         {
-            this.type = tp;
-            this.fullPath = path;
-            this.owner = parent;
-            this.Margin = new Padding(0);
-            this.BackgroundImage = img;
-            this.BackgroundImageLayout = ImageLayout.None;
-            this.Click += ClickEvent;
-            this.MouseEnter += onMouseEnter;
-            this.MouseLeave += onMouseLeave;
-            this.Paint += onPaint;
+            Type = tp;
+            FullPath = path;
+            Owner = parent;
+            Margin = new Padding(0);
+            BackgroundImage = img;
+            BackgroundImageLayout = ImageLayout.None;
+            Click += ClickEvent;
+            MouseEnter += OnMouseEnter;
+            MouseLeave += OnMouseLeave;
 
             Text = new Label();
             Text.Parent = this;
@@ -48,50 +43,40 @@ namespace ImageDatabase
             Text.AutoEllipsis = true;
 
             SetVariables(size, fsize, img, parent, dmode);
-            Text.TextAlign = ContentAlignment.MiddleCenter;
             Text.BackColor = Color.Transparent;
-            if (type < 2)
+            if (Type < 2)
                 Text.Text = Path.GetFileName(path);
-            if (type == 3)
-                Text.Text = fullPath;
+            if (Type == 3)
+                Text.Text = FullPath;
             Text.BringToFront();
             Text.Click += ClickEvent;
-            Text.MouseEnter += onMouseEnter;
-            Text.MouseLeave += onMouseLeave; //TRINITY!!1!
+            Text.MouseEnter += OnMouseEnter;
+            Text.MouseLeave += OnMouseLeave; //TRINITY!!1!
         }
 
         public void SetVariables(int size, float fsize, Image backimg, FileBrowser parent, bool dmode)
         {
-            this.Width = (dmode ? parent.Width : size);
-            this.Height = size;
-            this.BackgroundImage = backimg;
-            Text.Location = new Point((dmode ? size : 0), (int)((dmode ? 0 : size * 0.6)));
-            Text.Width = (dmode ? parent.Width - size : size);
-            Text.Height = (dmode ? size : (int)(size * 0.4));
-            Text.Font = new Font(Text.Font.FontFamily, fsize);
-        }
-
-        public void onPaint(object sender, EventArgs e)
-        {
-            //CreateGraphics().DrawImage(icon, 0, 0, Math.Min(Width, Height), Math.Min(Width, Height));
+            Width = parent.CurrentLayout.GetElementWidth();
+            Height = parent.CurrentLayout.GetElementHeight();
+            BackgroundImage = backimg;
+            Text.Location = parent.CurrentLayout.GetLocation();
+            Text.Width = parent.CurrentLayout.GetTextWidth();
+            Text.Height = parent.CurrentLayout.GetTextHeight();
+            Text.Font = new Font(Text.Font.FontFamily, parent.CurrentLayout.GetFontSize());
+            Text.TextAlign = parent.CurrentLayout.GetAlign();
         }
 
         public void ClickEvent(object sender, EventArgs e)
         {
-            owner.ClickedItem(this);
+            Owner.ClickedItem(this);
         }
 
-        public void onMouseHover(object sender, EventArgs e)
-        {
-            //BackColor = Color.LightGray;
-        }
-
-        public void onMouseEnter(object sender, EventArgs e)
+        private void OnMouseEnter(object sender, EventArgs e)
         {
             BackColor = Color.LightGray;
         }
 
-        public void onMouseLeave(object sender, EventArgs e)
+        private void OnMouseLeave(object sender, EventArgs e)
         {
             BackColor = Color.Transparent;
         }
