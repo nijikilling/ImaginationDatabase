@@ -1,20 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using ImageDatabase.Layout;
+using ImageDatabase.Properties;
 
 namespace ImageDatabase.Source
 {
     public sealed class FileBrowser : FlowLayoutPanel
     {
         public string CurrentDirectory;
-        public List<FileBrowserItem> Items;
-        public int ItemSize;
-        public float FontSize;
-        public int Mode;
-        public LayoutScheme LayoutFlat, LayoutList, CurrentLayout;
+        private List<FileBrowserItem> _items;
+        private int _itemSize;
+        private float _fontSize;
+        private LayoutScheme _layoutFlat;
+        private LayoutScheme _layoutList;
+        public LayoutScheme CurrentLayout;
         //0 -> browsing collection
         //1 -> browsing filesystem(collections)
         //2 -> browsing filesystem(folders and files)
@@ -26,58 +29,68 @@ namespace ImageDatabase.Source
         private Bitmap _returnFolder;
 
         private float _fv, _iv;
+        private readonly HashSet<string> _imageExtensions;
 
         public FileBrowser()
         {
-            Items = new List<FileBrowserItem>();
+            _imageExtensions = new HashSet<string> {".bmp", ".gif", ".png", ".jpg", ".jpeg"};
+            _items = new List<FileBrowserItem>();
         }
 
-        public Bitmap FolderIconWorkaround(Bitmap sampler)
+        private Bitmap FolderIconWorkaround(Bitmap sampler)
         {
-            return new Bitmap(sampler, new Size(CurrentLayout.GetElementHeight(), CurrentLayout.GetElementHeight()));
+            double shrinkCoeff = Math.Max(sampler.Width, sampler.Height) * 1.0F / CurrentLayout.GetElementHeight();
+            return new Bitmap(sampler, new Size(Convert.ToInt32(sampler.Width / shrinkCoeff), Convert.ToInt32(sampler.Height / shrinkCoeff)));
         } 
 
-        public FileBrowser(string initialDir, int itemSize, int mod, Form1 parent)
+        public FileBrowser(string initialDir, int itemSize, Form1 parent, HashSet<string> imageExtensions)
         {
             Parent = parent;
             Dock = DockStyle.Fill;
             CurrentDirectory = initialDir;
-            Items = new List<FileBrowserItem>();
-            ItemSize = itemSize;
-            Mode = mod;
+            _items = new List<FileBrowserItem>();
+            _itemSize = itemSize;
+            _imageExtensions = imageExtensions;
             AutoScroll = true;
             _folderPicture = FolderIconWorkaround(Properties.Resources.Folder);
             _returnFolder = FolderIconWorkaround(Properties.Resources.ReturnFolder);
-            LayoutFlat = new FlatScheme(this);
-            LayoutList = new ListScheme(this);
-            CurrentLayout = LayoutFlat;
+            _layoutFlat = new FlatScheme(this);
+            _layoutList = new ListScheme(this);
+            CurrentLayout = _layoutFlat;
         }
 
-        public void ClearBrowser()
+        private void ClearBrowser()
         {
-            Debug.Assert(Items != null, "Items != null");
-            foreach (FileBrowserItem c in Items)
+            Debug.Assert(_items != null, "Items != null");
+            foreach (FileBrowserItem c in _items)
                 c.Deconstruct();
-            Items = new List<FileBrowserItem>();
+            _items = new List<FileBrowserItem>();
         }
 
-        public void AddItem(int type, string pth, Image img)
+        private void AddItem(int type, string pth, Bitmap img)
         {
-            FileBrowserItem item = new FileBrowserItem(type, pth, ItemSize, FontSize, img, this, DisplayMode);
-            Items.Add(item);
+            FileBrowserItem item = new FileBrowserItem(type, pth, _itemSize, _fontSize, img, this, DisplayMode);
+            _items.Add(item);
+        }
+
+        private void BuildCollection()
+        {
+            Database db = Database.Load(CurrentDirectory);
+            
         }
 
         public void BuildFolder()
         {
+            //ToDo make async - very slow, especially on big folders. 
             ClearBrowser();
-            if (CurrentDirectory == null)
+            if (CurrentDirectory == null) //if should write disks
             {
-                foreach(string dd in Directory.GetLogicalDrives())
+                foreach(var dd in Directory.GetLogicalDrives())
                 {
                     AddItem(3, dd, _folderPicture);
                 }
                 // ReSharper disable once CoVariantArrayConversion
-                Controls.AddRange(Items.ToArray());
+                Controls.AddRange(_items.ToArray());
                 VerticalScroll.Value = 0;
                 return;
             }
@@ -86,36 +99,62 @@ namespace ImageDatabase.Source
             {
                 AddItem(0, p, _folderPicture);
             }
+            foreach (string p in Directory.GetFiles(CurrentDirectory))
+            {
+                if (IsImageFile(p))
+                    AddItem(1, p, new Bitmap(p));
+                if (IsCollectionFile(p))
+                    AddItem(4, p, Resources.Collection);
+            }
             // ReSharper disable once CoVariantArrayConversion
-            Controls.AddRange(Items.ToArray());
+            Controls.AddRange(_items.ToArray());
             VerticalScroll.Value = 0;
             UpdateContent();
         }
+
+        private bool IsCollectionFile(string filePath)
+        {
+            string ext = Path.GetExtension(filePath);
+            return ext == ".idb";
+        }
+
+        private bool IsImageFile(string filePath)
+        {
+            string ext = Path.GetExtension(filePath);
+            return _imageExtensions.Contains(ext);
+        }
+
         public void ClickedItem(FileBrowserItem item)
         {
+            RedrawControl.SuspendDrawing(this);
+            SuspendLayout();
             if (item.Type == 0 || item.Type == 3)
             {
                 CurrentDirectory = item.FullPath;
-                SuspendLayout();
                 ClearBrowser();
                 BuildFolder();
-                ResumeLayout();
             }
-            if (item.Type == 2)
+            else if (item.Type == 2)
             {
                 CurrentDirectory = Path.GetDirectoryName(item.FullPath);
-                SuspendLayout();
                 ClearBrowser();
                 BuildFolder();
-                ResumeLayout();
             }
+            else if (item.Type == 4)
+            {
+                CurrentDirectory = item.FullPath;
+                ClearBrowser();
+                BuildCollection();
+            }
+            ResumeLayout();
+            RedrawControl.ResumeDrawing(this);
         }
         public void RecalcFontAndItemSize(float fontVal, float itemVal)
         {
             _fv = fontVal;
             _iv = itemVal;
-            LayoutFlat = new FlatScheme(this);
-            LayoutList = new ListScheme(this);
+            _layoutFlat = new FlatScheme(this);
+            _layoutList = new ListScheme(this);
             Database db = Database.Load("test.txt");
             db.AddPicture("cursor2.png");
             db.Save();
@@ -123,17 +162,19 @@ namespace ImageDatabase.Source
         }
         public void UpdateContent()
         { 
-            CurrentLayout = (DisplayMode ? LayoutList : LayoutFlat);
+            RedrawControl.SuspendDrawing(this);
+            CurrentLayout = DisplayMode ? _layoutList : _layoutFlat;
             CurrentLayout.RecalcCurrentFontSize(_fv);
             CurrentLayout.RecalcCurrentItemSize(_iv);
-            _folderPicture = FolderIconWorkaround(Properties.Resources.Folder);
-            _returnFolder = FolderIconWorkaround(Properties.Resources.ReturnFolder);
+            _folderPicture = Properties.Resources.Folder;
+            _returnFolder = Properties.Resources.ReturnFolder;
             SuspendLayout();
-            foreach (FileBrowserItem item in Items)
+            foreach (FileBrowserItem item in _items)
             {
-                item.SetVariables(ItemSize, FontSize, (item.Type == 2 ? _returnFolder : _folderPicture), this, DisplayMode);
+                item.SetVariables(FolderIconWorkaround(item.FullImage), this);
             }
             ResumeLayout();
+            RedrawControl.ResumeDrawing(this);
         }
     }
 }

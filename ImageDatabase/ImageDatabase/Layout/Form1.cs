@@ -22,6 +22,7 @@ namespace ImageDatabase.Layout
             fileBrowser1.CurrentDirectory = null;
             fileBrowser1.RecalcFontAndItemSize(trackBar1.Value / 100.0F, trackBar2.Value / 100.0F);
             fileBrowser1.BuildFolder();
+            fileBrowser1.UpdateContent();
         }
 
         private void settingsToolStripMenuItem_Click(object sender, EventArgs e)

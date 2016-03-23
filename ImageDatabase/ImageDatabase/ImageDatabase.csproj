@@ -85,6 +85,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Source\LayoutScheme.cs" />
+    <Compile Include="Source\RedrawControl.cs" />
     <Compile Include="Source\StreamParser.cs" />
     <Compile Include="Source\Tag.cs" />
     <EmbeddedResource Include="Layout\Form1.resx">
@@ -148,6 +149,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\ReturnFolderNospace.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Collection.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

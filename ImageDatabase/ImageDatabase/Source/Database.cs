@@ -59,7 +59,7 @@ namespace ImageDatabase.Source
             Element elem = new Element {Identifier = Path.GetFileName(path)};
             elem.Tags.Add("NAME", new Tag(elem.Identifier));
             Data.Add(elem);
-            elem.SavePictureData(CacheFolder);
+            //elem.SavePictureData(CacheFolder);
         }
     }
 }

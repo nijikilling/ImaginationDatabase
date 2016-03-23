@@ -12,10 +12,11 @@ namespace ImageDatabase.Source
         //1 => file
         //2 => go up
         //3 => disk drive
+        //4 => collection
 
         public string FullPath;
         public FileBrowser Owner;
-        public Image Icon;
+        public Bitmap FullImage;
 
         public new Label Text;
         public PictureBox PictureBlock;
@@ -25,24 +26,26 @@ namespace ImageDatabase.Source
             
         }
 
-        public FileBrowserItem(int tp, string path, int size, float fsize, Image img, FileBrowser parent, bool dmode)
+        public FileBrowserItem(int tp, string path, int size, float fsize, Bitmap img, FileBrowser parent, bool dmode)
         {
             Type = tp;
             FullPath = path;
             Owner = parent;
             Margin = new Padding(0);
-            BackgroundImage = img;
+            FullImage = img; // FullImage - contains image in natural size.
             BackgroundImageLayout = ImageLayout.None;
             Click += ClickEvent;
             MouseEnter += OnMouseEnter;
             MouseLeave += OnMouseLeave;
 
-            Text = new Label();
-            Text.Parent = this;
-            Text.AutoSize = false;
-            Text.AutoEllipsis = true;
+            Text = new Label
+            {
+                Parent = this,
+                AutoSize = false,
+                AutoEllipsis = true
+            };
 
-            SetVariables(size, fsize, img, parent, dmode);
+            SetVariables(img, parent);
             Text.BackColor = Color.Transparent;
             if (Type < 2)
                 Text.Text = Path.GetFileName(path);
@@ -51,10 +54,15 @@ namespace ImageDatabase.Source
             Text.BringToFront();
             Text.Click += ClickEvent;
             Text.MouseEnter += OnMouseEnter;
-            Text.MouseLeave += OnMouseLeave; //TRINITY!!1!
+            Text.MouseLeave += OnMouseLeave; 
         }
 
-        public void SetVariables(int size, float fsize, Image backimg, FileBrowser parent, bool dmode)
+        public void UpdateIcon(Image newIcon)
+        {
+            BackgroundImage = newIcon;
+        }
+
+        public void SetVariables(Image backimg, FileBrowser parent)
         {
             Width = parent.CurrentLayout.GetElementWidth();
             Height = parent.CurrentLayout.GetElementHeight();
@@ -66,7 +74,7 @@ namespace ImageDatabase.Source
             Text.TextAlign = parent.CurrentLayout.GetAlign();
         }
 
-        public void ClickEvent(object sender, EventArgs e)
+        private void ClickEvent(object sender, EventArgs e)
         {
             Owner.ClickedItem(this);
         }
