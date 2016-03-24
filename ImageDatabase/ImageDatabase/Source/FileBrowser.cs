@@ -13,8 +13,6 @@ namespace ImageDatabase.Source
     {
         public string CurrentDirectory;
         private List<FileBrowserItem> _items;
-        private int _itemSize;
-        private float _fontSize;
         private LayoutScheme _layoutFlat;
         private LayoutScheme _layoutList;
         public LayoutScheme CurrentLayout;
@@ -35,6 +33,9 @@ namespace ImageDatabase.Source
         {
             _imageExtensions = new HashSet<string> {".bmp", ".gif", ".png", ".jpg", ".jpeg"};
             _items = new List<FileBrowserItem>();
+            //Database db = Database.Load("test.idb");
+            //db.AddPicture("cursor2.png");
+            //db.Save();
         }
 
         private Bitmap FolderIconWorkaround(Bitmap sampler)
@@ -49,11 +50,10 @@ namespace ImageDatabase.Source
             Dock = DockStyle.Fill;
             CurrentDirectory = initialDir;
             _items = new List<FileBrowserItem>();
-            _itemSize = itemSize;
             _imageExtensions = imageExtensions;
             AutoScroll = true;
-            _folderPicture = FolderIconWorkaround(Properties.Resources.Folder);
-            _returnFolder = FolderIconWorkaround(Properties.Resources.ReturnFolder);
+            _folderPicture = FolderIconWorkaround(Resources.Folder);
+            _returnFolder = FolderIconWorkaround(Resources.ReturnFolder);
             _layoutFlat = new FlatScheme(this);
             _layoutList = new ListScheme(this);
             CurrentLayout = _layoutFlat;
@@ -67,16 +67,24 @@ namespace ImageDatabase.Source
             _items = new List<FileBrowserItem>();
         }
 
-        private void AddItem(int type, string pth, Bitmap img)
+        private void AddItem(ItemType type, string pth, Bitmap img)
         {
-            FileBrowserItem item = new FileBrowserItem(type, pth, _itemSize, _fontSize, img, this, DisplayMode);
+            FileBrowserItem item = new FileBrowserItem(type, pth, img, this);
             _items.Add(item);
         }
 
         private void BuildCollection()
         {
             Database db = Database.Load(CurrentDirectory);
-            
+            foreach (Element el in db.Data)
+            {
+                el.GetPictureData(db.CacheFolder);
+                AddItem(ItemType.File, el.Identifier, el.picture);
+            }
+            // ReSharper disable once CoVariantArrayConversion
+            Controls.AddRange(_items.ToArray());
+            VerticalScroll.Value = 0;
+            UpdateContent();
         }
 
         public void BuildFolder()
@@ -87,24 +95,24 @@ namespace ImageDatabase.Source
             {
                 foreach(var dd in Directory.GetLogicalDrives())
                 {
-                    AddItem(3, dd, _folderPicture);
+                    AddItem(ItemType.Drive, dd, _folderPicture);
                 }
                 // ReSharper disable once CoVariantArrayConversion
                 Controls.AddRange(_items.ToArray());
                 VerticalScroll.Value = 0;
                 return;
             }
-            AddItem(2, CurrentDirectory, _returnFolder);
+            AddItem(ItemType.Return, CurrentDirectory, _returnFolder);
             foreach (string p in Directory.GetDirectories(CurrentDirectory))
             {
-                AddItem(0, p, _folderPicture);
+                AddItem(ItemType.Folder, p, _folderPicture);
             }
             foreach (string p in Directory.GetFiles(CurrentDirectory))
             {
                 if (IsImageFile(p))
-                    AddItem(1, p, new Bitmap(p));
+                    AddItem(ItemType.File, p, new Bitmap(p));
                 if (IsCollectionFile(p))
-                    AddItem(4, p, Resources.Collection);
+                    AddItem(ItemType.Collection, p, Resources.Collection);
             }
             // ReSharper disable once CoVariantArrayConversion
             Controls.AddRange(_items.ToArray());
@@ -128,19 +136,19 @@ namespace ImageDatabase.Source
         {
             RedrawControl.SuspendDrawing(this);
             SuspendLayout();
-            if (item.Type == 0 || item.Type == 3)
+            if (item.Type == ItemType.Folder || item.Type == ItemType.Drive)
             {
                 CurrentDirectory = item.FullPath;
                 ClearBrowser();
                 BuildFolder();
             }
-            else if (item.Type == 2)
+            else if (item.Type == ItemType.Return)
             {
                 CurrentDirectory = Path.GetDirectoryName(item.FullPath);
                 ClearBrowser();
                 BuildFolder();
             }
-            else if (item.Type == 4)
+            else if (item.Type == ItemType.Collection)
             {
                 CurrentDirectory = item.FullPath;
                 ClearBrowser();
@@ -155,9 +163,6 @@ namespace ImageDatabase.Source
             _iv = itemVal;
             _layoutFlat = new FlatScheme(this);
             _layoutList = new ListScheme(this);
-            Database db = Database.Load("test.txt");
-            db.AddPicture("cursor2.png");
-            db.Save();
             UpdateContent();
         }
         public void UpdateContent()
@@ -166,8 +171,8 @@ namespace ImageDatabase.Source
             CurrentLayout = DisplayMode ? _layoutList : _layoutFlat;
             CurrentLayout.RecalcCurrentFontSize(_fv);
             CurrentLayout.RecalcCurrentItemSize(_iv);
-            _folderPicture = Properties.Resources.Folder;
-            _returnFolder = Properties.Resources.ReturnFolder;
+            _folderPicture = Resources.Folder;
+            _returnFolder = Resources.ReturnFolder;
             SuspendLayout();
             foreach (FileBrowserItem item in _items)
             {

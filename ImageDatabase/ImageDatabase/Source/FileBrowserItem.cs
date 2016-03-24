@@ -5,9 +5,18 @@ using System.Windows.Forms;
 
 namespace ImageDatabase.Source
 {
+    public enum ItemType
+    {
+        Folder,
+        File,
+        Return,
+        Drive,
+        Collection
+    };
+
     public sealed class FileBrowserItem : Panel
     {
-        public int Type;
+        public ItemType Type;
         //0 => folder
         //1 => file
         //2 => go up
@@ -26,7 +35,7 @@ namespace ImageDatabase.Source
             
         }
 
-        public FileBrowserItem(int tp, string path, int size, float fsize, Bitmap img, FileBrowser parent, bool dmode)
+        public FileBrowserItem(ItemType tp, string path, Bitmap img, FileBrowser parent)
         {
             Type = tp;
             FullPath = path;
@@ -47,9 +56,9 @@ namespace ImageDatabase.Source
 
             SetVariables(img, parent);
             Text.BackColor = Color.Transparent;
-            if (Type < 2)
+            if (Type == ItemType.Folder || Type == ItemType.File)
                 Text.Text = Path.GetFileName(path);
-            if (Type == 3)
+            if (Type == ItemType.Drive)
                 Text.Text = FullPath;
             Text.BringToFront();
             Text.Click += ClickEvent;

@@ -31,6 +31,7 @@ namespace ImageDatabase.Source
             StreamReader stream = new StreamReader(path);
             Database res = new Database();
             res.Filepath = path;
+            res.CacheFolder = Path.Combine(Path.GetDirectoryName(path), '.' + Path.GetFileNameWithoutExtension(path));
             res.Name = StreamParser.GetString(stream);
             res.PartCount = StreamParser.GetInt(stream);
             int size = StreamParser.GetInt(stream);
@@ -59,7 +60,7 @@ namespace ImageDatabase.Source
             Element elem = new Element {Identifier = Path.GetFileName(path)};
             elem.Tags.Add("NAME", new Tag(elem.Identifier));
             Data.Add(elem);
-            //elem.SavePictureData(CacheFolder);
+            elem.SavePictureData(CacheFolder, image);
         }
     }
 }

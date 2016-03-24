@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 
 namespace ImageDatabase.Source
 {
@@ -63,6 +64,8 @@ namespace ImageDatabase.Source
         public void SavePictureData(string cacheFolder, Bitmap bmp)
         {
             string cacheFile = Path.Combine(cacheFolder, GetCacheFileName());
+            Directory.CreateDirectory(cacheFolder);
+            File.Create(cacheFile).Close();
             StreamWriter stream = new StreamWriter(cacheFile);
             byte[] imageBytes = new byte[bmp.Width * bmp.Height * 4]; //ARGB. TODO - get rid of encoding dependency
             Tags[Reserved.Width] = new Tag(bmp.Width);
@@ -78,7 +81,9 @@ namespace ImageDatabase.Source
                     imageBytes[ind + 3] = bmp.GetPixel(j, i).B;
                 }
             }
-            stream.Write(imageBytes);
+            for (int i = 0; i < bmp.Width * bmp.Height * 4; i++)
+                stream.Write(Convert.ToChar(imageBytes[i]));
+            stream.Close();
         }
 
         public void GetPictureData(string cacheFolder)

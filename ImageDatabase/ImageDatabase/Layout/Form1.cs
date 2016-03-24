@@ -1,20 +1,13 @@
 ﻿using System;
 using System.Windows.Forms;
-using ImageDatabase.Source;
 
 namespace ImageDatabase.Layout
 {
     public partial class Form1 : Form
     {
-        //public FileBrowser fileBrowser1;
         public Form1()
         {
             InitializeComponent();
-        }
-
-        public void ClickedItem(FileBrowserItem item)
-        {
-
         }
 
         private void Form1_Shown(object sender, EventArgs e)
@@ -23,6 +16,10 @@ namespace ImageDatabase.Layout
             fileBrowser1.RecalcFontAndItemSize(trackBar1.Value / 100.0F, trackBar2.Value / 100.0F);
             fileBrowser1.BuildFolder();
             fileBrowser1.UpdateContent();
+            fileBrowser2.CurrentDirectory = null;
+            fileBrowser2.RecalcFontAndItemSize(trackBar1.Value / 100.0F, trackBar2.Value / 100.0F);
+            fileBrowser2.BuildFolder();
+            fileBrowser2.UpdateContent();
         }
 
         private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
